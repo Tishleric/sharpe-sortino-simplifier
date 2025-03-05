@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -236,157 +237,158 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                 </Button>
               </div>
             </div>
+          </CardHeader>
+          
+          <CardContent className="pt-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mt-4">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
                 <TabsTrigger value="summary">Summary</TabsTrigger>
                 <TabsTrigger value="chart">Distribution</TabsTrigger>
                 <TabsTrigger value="explanation">Methodology</TabsTrigger>
               </TabsList>
-            </Tabs>
-          </CardHeader>
-          
-          <CardContent className="pt-4">
-            <TabsContent value="summary" className="mt-0">
-              <div className="space-y-4">
-                <div className="bg-muted/30 p-4 rounded-md">
-                  <h3 className="text-sm font-medium mb-2">Return Statistics</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-card p-3 rounded-md shadow-subtle">
-                      <div className="text-muted-foreground text-xs">Annualized Return</div>
-                      <div className="text-lg font-semibold mt-1">
-                        {result.annualizedReturn.toFixed(2)}%
+              
+              <TabsContent value="summary" className="mt-0">
+                <div className="space-y-4">
+                  <div className="bg-muted/30 p-4 rounded-md">
+                    <h3 className="text-sm font-medium mb-2">Return Statistics</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-card p-3 rounded-md shadow-subtle">
+                        <div className="text-muted-foreground text-xs">Annualized Return</div>
+                        <div className="text-lg font-semibold mt-1">
+                          {result.annualizedReturn.toFixed(2)}%
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-card p-3 rounded-md shadow-subtle">
-                      <div className="text-muted-foreground text-xs">Total Data Points</div>
-                      <div className="text-lg font-semibold mt-1">
-                        {result.totalReturns}
+                      <div className="bg-card p-3 rounded-md shadow-subtle">
+                        <div className="text-muted-foreground text-xs">Total Data Points</div>
+                        <div className="text-lg font-semibold mt-1">
+                          {result.totalReturns}
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-card p-3 rounded-md shadow-subtle">
-                      <div className="text-muted-foreground text-xs">Positive Returns</div>
-                      <div className="text-lg font-semibold mt-1 text-success-DEFAULT">
-                        {result.positiveReturns}
+                      <div className="bg-card p-3 rounded-md shadow-subtle">
+                        <div className="text-muted-foreground text-xs">Positive Returns</div>
+                        <div className="text-lg font-semibold mt-1 text-success-DEFAULT">
+                          {result.positiveReturns}
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-card p-3 rounded-md shadow-subtle">
-                      <div className="text-muted-foreground text-xs">Negative Returns</div>
-                      <div className="text-lg font-semibold mt-1 text-destructive">
-                        {result.negativeReturns}
+                      <div className="bg-card p-3 rounded-md shadow-subtle">
+                        <div className="text-muted-foreground text-xs">Negative Returns</div>
+                        <div className="text-lg font-semibold mt-1 text-destructive">
+                          {result.negativeReturns}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Metric</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Mean Return (per period)</TableCell>
+                        <TableCell className="text-right font-medium">{formatPercent(result.meanReturn)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Standard Deviation</TableCell>
+                        <TableCell className="text-right font-medium">{formatPercent(result.stdDeviation)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Downside Deviation</TableCell>
+                        <TableCell className="text-right font-medium">{formatPercent(result.downsideDeviation)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Minimum Return</TableCell>
+                        <TableCell className="text-right font-medium text-destructive">{formatPercent(result.minReturn)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Maximum Return</TableCell>
+                        <TableCell className="text-right font-medium text-success-DEFAULT">{formatPercent(result.maxReturn)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Metric</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Mean Return (per period)</TableCell>
-                      <TableCell className="text-right font-medium">{formatPercent(result.meanReturn)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Standard Deviation</TableCell>
-                      <TableCell className="text-right font-medium">{formatPercent(result.stdDeviation)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Downside Deviation</TableCell>
-                      <TableCell className="text-right font-medium">{formatPercent(result.downsideDeviation)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Minimum Return</TableCell>
-                      <TableCell className="text-right font-medium text-destructive">{formatPercent(result.minReturn)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Maximum Return</TableCell>
-                      <TableCell className="text-right font-medium text-success-DEFAULT">{formatPercent(result.maxReturn)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="chart" className="mt-0">
-              <div className="h-[300px] bg-white p-4 rounded-md shadow-subtle">
-                <Bar data={prepareHistogramData()} options={chartOptions} />
-              </div>
-              <div className="flex items-center gap-2 mt-4">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="text-xs">Negative Returns</span>
+              </TabsContent>
+              
+              <TabsContent value="chart" className="mt-0">
+                <div className="h-[300px] bg-white p-4 rounded-md shadow-subtle">
+                  <Bar data={prepareHistogramData()} options={chartOptions} />
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-xs">Positive Returns</span>
+                <div className="flex items-center gap-2 mt-4">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <span className="text-xs">Negative Returns</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-xs">Positive Returns</span>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="explanation" className="mt-0">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="p-2 bg-accent rounded-full mt-1">
-                      <Info className="h-5 w-5 text-primary" />
+              </TabsContent>
+              
+              <TabsContent value="explanation" className="mt-0">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="p-2 bg-accent rounded-full mt-1">
+                        <Info className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">About The Calculation</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          These ratios help compare investment returns on a risk-adjusted basis.
+                          Higher ratios indicate better risk-adjusted performance.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium">About The Calculation</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        These ratios help compare investment returns on a risk-adjusted basis.
-                        Higher ratios indicate better risk-adjusted performance.
+                    
+                    <div className="bg-muted/40 rounded-md p-4">
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-highlight" />
+                        Sharpe Ratio
+                      </h4>
+                      <p className="text-sm mb-3">
+                        The Sharpe ratio divides the excess return over the risk-free rate by the standard deviation of returns.
+                      </p>
+                      <div className="bg-white p-3 rounded-md border text-sm font-mono">
+                        Sharpe = (Mean Return - Risk Free Rate) / Standard Deviation × √(Trading Periods)
+                      </div>
+                    </div>
+                    
+                    <div className="bg-muted/40 rounded-md p-4">
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-success" />
+                        Sortino Ratio
+                      </h4>
+                      <p className="text-sm mb-3">
+                        The Sortino ratio is similar to Sharpe but only considers downside risk (negative returns).
+                      </p>
+                      <div className="bg-white p-3 rounded-md border text-sm font-mono">
+                        Sortino = (Mean Return - Risk Free Rate) / Downside Deviation × √(Trading Periods)
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Downside deviation only considers returns below the target (or risk-free rate if no target is specified).
                       </p>
                     </div>
                   </div>
                   
-                  <div className="bg-muted/40 rounded-md p-4">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-highlight" />
-                      Sharpe Ratio
-                    </h4>
-                    <p className="text-sm mb-3">
-                      The Sharpe ratio divides the excess return over the risk-free rate by the standard deviation of returns.
-                    </p>
-                    <div className="bg-white p-3 rounded-md border text-sm font-mono">
-                      Sharpe = (Mean Return - Risk Free Rate) / Standard Deviation × √(Trading Periods)
-                    </div>
-                  </div>
+                  <Separator />
                   
-                  <div className="bg-muted/40 rounded-md p-4">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-success" />
-                      Sortino Ratio
-                    </h4>
-                    <p className="text-sm mb-3">
-                      The Sortino ratio is similar to Sharpe but only considers downside risk (negative returns).
-                    </p>
-                    <div className="bg-white p-3 rounded-md border text-sm font-mono">
-                      Sortino = (Mean Return - Risk Free Rate) / Downside Deviation × √(Trading Periods)
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Downside deviation only considers returns below the target (or risk-free rate if no target is specified).
-                    </p>
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Interpreting Results</h4>
+                    <ul className="space-y-2 text-sm list-disc pl-5">
+                      <li>A higher ratio indicates better risk-adjusted returns</li>
+                      <li>Generally, a Sharpe ratio above 1.0 is considered acceptable</li>
+                      <li>A ratio above 2.0 is considered very good</li>
+                      <li>Sortino ratios tend to be higher than Sharpe when losses are infrequent</li>
+                      <li>These ratios should be used as one of multiple metrics to evaluate performance</li>
+                    </ul>
                   </div>
                 </div>
-                
-                <Separator />
-                
-                <div className="space-y-3">
-                  <h4 className="font-medium">Interpreting Results</h4>
-                  <ul className="space-y-2 text-sm list-disc pl-5">
-                    <li>A higher ratio indicates better risk-adjusted returns</li>
-                    <li>Generally, a Sharpe ratio above 1.0 is considered acceptable</li>
-                    <li>A ratio above 2.0 is considered very good</li>
-                    <li>Sortino ratios tend to be higher than Sharpe when losses are infrequent</li>
-                    <li>These ratios should be used as one of multiple metrics to evaluate performance</li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
