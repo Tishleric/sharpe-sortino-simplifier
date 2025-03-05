@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, Download, InfoCircle, RefreshCw } from 'lucide-react';
+import { BarChart3, Download, Info, RefreshCw } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -333,7 +332,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                 <div className="space-y-2">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="p-2 bg-accent rounded-full mt-1">
-                      <InfoCircle className="h-5 w-5 text-primary" />
+                      <Info className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <h3 className="font-medium">About The Calculation</h3>

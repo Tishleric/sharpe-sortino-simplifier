@@ -10,9 +10,9 @@ import { Separator } from '@/components/ui/separator';
 
 // Application states
 enum AppState {
-  UPLOAD,
-  PREVIEW,
-  RESULTS
+  UPLOAD = 'UPLOAD',
+  PREVIEW = 'PREVIEW',
+  RESULTS = 'RESULTS'
 }
 
 const Index = () => {
@@ -65,7 +65,7 @@ const Index = () => {
         )}
         
         {/* Step Indicators - Only show in the first two states */}
-        {appState !== AppState.RESULTS && (
+        {(appState === AppState.UPLOAD || appState === AppState.PREVIEW) && (
           <div className="max-w-lg mx-auto mb-10 animate-fade-in">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
