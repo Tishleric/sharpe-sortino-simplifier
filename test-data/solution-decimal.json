@@ -1,0 +1,17 @@
+{
+  "meanReturn": 0.0235,
+  "stdDeviation": 0.0236,
+  "downsideDeviation": 0.0177,
+  "minReturn": -0.020,
+  "maxReturn": 0.050,
+  "positiveReturns": 8,
+  "negativeReturns": 2,
+  "totalReturns": 10,
+  "sharpeRatio": 15.80,
+  "sortinoRatio": 21.10,
+  "annualizedReturn": 358.4474,
+  "format": "decimal",
+  "riskFreeRate": 0,
+  "tradingPeriods": 252,
+  "explanation": "These are the expected values when using decimal data format. Note that the expected display should convert the decimal values to percentages where appropriate."
+} 

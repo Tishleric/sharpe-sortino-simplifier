@@ -13,7 +13,7 @@ import { CalculationParams } from '@/utils/calculationUtils';
 
 interface DataPreviewProps {
   data: ParsedData;
-  onProceed: (values: number[], params: CalculationParams) => void;
+  onProceed: (values: number[], params: CalculationParams, dataFormat: string) => void;
   onReset: () => void;
 }
 
@@ -23,7 +23,9 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
   const [riskFreeRate, setRiskFreeRate] = useState<string>('0');
   const [tradingPeriods, setTradingPeriods] = useState<string>('252');
   const [targetReturn, setTargetReturn] = useState<string>('');
+  const [portfolioValue, setPortfolioValue] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [dataFormat, setDataFormat] = useState<string>('auto');
 
   // Handle column selection
   const handleColumnSelect = (value: string) => {
@@ -42,8 +44,9 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
     const riskFree = parseFloat(riskFreeRate);
     const periods = parseInt(tradingPeriods);
     const target = targetReturn ? parseFloat(targetReturn) : undefined;
+    const portfolio = portfolioValue ? parseFloat(portfolioValue) : undefined;
 
-    if (isNaN(riskFree) || isNaN(periods) || (targetReturn && isNaN(target))) {
+    if (isNaN(riskFree) || isNaN(periods) || (targetReturn && isNaN(target)) || (portfolioValue && isNaN(portfolio))) {
       toast.error('Please enter valid numbers for all fields');
       return;
     }
@@ -53,11 +56,17 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
       return;
     }
 
+    // Optional validation for portfolio value if data format is absolute
+    if (dataFormat === 'absolute' && portfolioValue && portfolio <= 0) {
+      toast.error('Portfolio value must be greater than zero');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Extract numeric data from the selected column
-      const numericValues = extractValidNumbers(data.rows, columnIndex);
+      const numericValues = extractValidNumbers(data.rows, columnIndex, dataFormat);
       
       if (numericValues.length < 10) {
         toast.error('Not enough valid numeric data points (minimum 10 required)');
@@ -71,7 +80,12 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
         targetReturn: target
       };
 
-      onProceed(numericValues, params);
+      // Add portfolio value to params if provided
+      if (portfolio) {
+        params.portfolioValue = portfolio;
+      }
+
+      onProceed(numericValues, params, dataFormat);
     } catch (error) {
       console.error('Error processing data:', error);
       toast.error('Failed to process data. Please try again.');
@@ -191,6 +205,72 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
               
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
+                  <Label>Data Format</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Specify your data format or let the system auto-detect it.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="format-auto" 
+                      name="format"
+                      value="auto"
+                      checked={dataFormat === 'auto'}
+                      onChange={(e) => setDataFormat(e.target.value)}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="format-auto" className="text-sm font-normal">Auto-detect</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="format-percent" 
+                      name="format"
+                      value="percent"
+                      checked={dataFormat === 'percent'}
+                      onChange={(e) => setDataFormat(e.target.value)}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="format-percent" className="text-sm font-normal">Percentage (5 = 5%)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="format-decimal" 
+                      name="format"
+                      value="decimal"
+                      checked={dataFormat === 'decimal'}
+                      onChange={(e) => setDataFormat(e.target.value)}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="format-decimal" className="text-sm font-normal">Decimal (0.05 = 5%)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="format-absolute" 
+                      name="format"
+                      value="absolute"
+                      checked={dataFormat === 'absolute'}
+                      onChange={(e) => setDataFormat(e.target.value)}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="format-absolute" className="text-sm font-normal">Absolute ($)</Label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
                   <Label htmlFor="risk-free-rate">Annual Risk-Free Rate (%)</Label>
                   <TooltipProvider>
                     <Tooltip>
@@ -213,6 +293,34 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
                   placeholder="0"
                 />
               </div>
+
+              {/* Portfolio Value Input - Only visible for absolute data format */}
+              {(dataFormat === 'absolute' || dataFormat === 'auto') && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="portfolio-value">Portfolio Value ($)</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">Total portfolio value used to convert absolute PnL to percentage returns for more accurate ratio calculations.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="portfolio-value"
+                    type="number"
+                    step="1"
+                    value={portfolioValue}
+                    onChange={(e) => setPortfolioValue(e.target.value)}
+                    className="input-number-clean"
+                    placeholder="e.g., 100000"
+                  />
+                </div>
+              )}
             </div>
             
             <div className="space-y-4">

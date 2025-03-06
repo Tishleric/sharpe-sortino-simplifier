@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
@@ -20,6 +19,7 @@ const Index = () => {
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [returnValues, setReturnValues] = useState<number[]>([]);
+  const [dataFormat, setDataFormat] = useState<string>('auto');
   
   // Handle file upload
   const handleDataParsed = (data: ParsedData) => {
@@ -28,10 +28,17 @@ const Index = () => {
   };
   
   // Handle calculation
-  const handleCalculate = (values: number[], params: CalculationParams) => {
-    const calculationResult = calculateSharpeAndSortino(values, params);
+  const handleCalculate = (values: number[], params: CalculationParams, format: string) => {
+    // Add dataFormat to params
+    const paramsWithFormat = {
+      ...params,
+      dataFormat: format
+    };
+    
+    const calculationResult = calculateSharpeAndSortino(values, paramsWithFormat);
     setReturnValues(values);
     setResult(calculationResult);
+    setDataFormat(format);
     setAppState(AppState.RESULTS);
   };
   
@@ -40,6 +47,7 @@ const Index = () => {
     setParsedData(null);
     setResult(null);
     setReturnValues([]);
+    setDataFormat('auto');
     setAppState(AppState.UPLOAD);
   };
   
@@ -100,12 +108,12 @@ const Index = () => {
                 
                 <div className="flex items-center justify-center">
                   <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-medium ${
-                    appState === AppState.RESULTS ? 'bg-primary text-white border-transparent' : 'bg-background text-muted-foreground'
+                    appState as string === AppState.RESULTS ? 'bg-primary text-white border-transparent' : 'bg-background text-muted-foreground'
                   }`}>
                     3
                   </div>
                   <span className={`absolute -bottom-6 text-xs ${
-                    appState === AppState.RESULTS ? 'text-primary font-medium' : 'text-muted-foreground'
+                    appState as string === AppState.RESULTS ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}>
                     Results
                   </span>
@@ -134,6 +142,7 @@ const Index = () => {
               result={result} 
               returnValues={returnValues}
               onReset={handleReset}
+              dataFormat={dataFormat}
             />
           )}
         </div>

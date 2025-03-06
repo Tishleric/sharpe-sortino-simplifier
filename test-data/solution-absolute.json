@@ -1,0 +1,17 @@
+{
+  "meanReturn": 235.00,
+  "stdDeviation": 236.17,
+  "downsideDeviation": 176.78,
+  "minReturn": -200.00,
+  "maxReturn": 500.00,
+  "positiveReturns": 8,
+  "negativeReturns": 2,
+  "totalReturns": 10,
+  "sharpeRatio": 15.80,
+  "sortinoRatio": 21.10,
+  "annualizedReturn": 59220.00,
+  "format": "absolute",
+  "riskFreeRate": 0,
+  "tradingPeriods": 252,
+  "explanation": "These are the expected values when using absolute dollar values. For absolute values, the annualized return is simply the mean return multiplied by the number of trading periods (average daily return × trading days in a year)."
+} 

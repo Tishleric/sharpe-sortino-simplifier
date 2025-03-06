@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -14,6 +13,28 @@ export const supportedFileTypes = [
   'application/vnd.ms-excel',
   'text/tab-separated-values',
 ];
+
+// Detect if a number is likely an Excel date value
+// Excel dates are serial numbers counting days since Jan 1, 1900
+// Modern dates typically have values between 40000-50000
+export const isExcelDate = (value: number): boolean => {
+  return typeof value === 'number' && 
+    value > 35000 && value < 60000 && // Range for dates between ~1995 and ~2060
+    Math.floor(value) === value || Math.abs(Math.floor(value) - value) > 0.99; // Integer or very close to it
+};
+
+// Convert Excel date number to formatted date string
+export const formatExcelDate = (excelDate: number): string => {
+  // Excel's date system has a leap year bug from 1900
+  // Dates are off by 1 day for dates after Feb 28, 1900
+  // XLSX.js accounts for this already
+  
+  // Create a JavaScript date from the Excel date
+  const date = XLSX.SSF.parse_date_code(excelDate);
+  
+  // Format as YYYY-MM-DD
+  return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+};
 
 export const parseFile = async (file: File): Promise<ParsedData | null> => {
   try {
@@ -36,6 +57,39 @@ export const parseFile = async (file: File): Promise<ParsedData | null> => {
     
     // Extract data rows
     const rows = rawData.slice(1) as (string | number)[][];
+    
+    // Date conversion is disabled by default to preserve original data format
+    // We'll keep the detection code here but commented out
+    
+    /*
+    // Look for date columns and convert Excel dates to readable format
+    for (let colIndex = 0; colIndex < headers.length; colIndex++) {
+      // Check if the column header contains "date" or similar terms
+      const isDateColumn = headers[colIndex].toLowerCase().includes('date') || 
+                          headers[colIndex].toLowerCase().includes('time');
+      
+      // Check the first few values to see if they look like Excel dates
+      let excelDateCount = 0;
+      const sampleSize = Math.min(5, rows.length);
+      
+      for (let rowIndex = 0; rowIndex < sampleSize; rowIndex++) {
+        const value = rows[rowIndex][colIndex];
+        if (typeof value === 'number' && isExcelDate(value)) {
+          excelDateCount++;
+        }
+      }
+      
+      // If most of the sampled values look like Excel dates, convert the column
+      if (isDateColumn || excelDateCount > sampleSize / 2) {
+        for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+          const value = rows[rowIndex][colIndex];
+          if (typeof value === 'number' && isExcelDate(value)) {
+            rows[rowIndex][colIndex] = formatExcelDate(value);
+          }
+        }
+      }
+    }
+    */
     
     return {
       headers,
@@ -81,8 +135,63 @@ export const cleanNumericValue = (value: any): number | null => {
   return isNaN(numValue) ? null : numValue;
 };
 
-export const extractValidNumbers = (data: any[], columnIndex: number): number[] => {
-  return data
+export const extractValidNumbers = (data: any[], columnIndex: number, dataFormat: string = 'auto'): number[] => {
+  // Extract and filter valid numeric values
+  const values = data
     .map(row => cleanNumericValue(row[columnIndex]))
     .filter((value): value is number => value !== null);
+  
+  if (values.length === 0) return [];
+  
+  // Process values based on specified format or auto-detect
+  if (dataFormat === 'percent') {
+    // User explicitly specified percentage format (5 means 5%)
+    return values.map(v => v / 100);
+  } else if (dataFormat === 'decimal') {
+    // User explicitly specified decimal format (0.05 means 5%)
+    return values;
+  } else if (dataFormat === 'absolute') {
+    // User explicitly specified absolute dollar values - use as-is
+    return values;
+  } else {
+    // Auto-detect format - with more rigorous checks
+    // Sample all values for a more accurate assessment
+    const absValues = values.map(v => Math.abs(v));
+    const maxAbsValue = Math.max(...absValues);
+    const minAbsValue = Math.min(...absValues.filter(v => v > 0)); // Smallest non-zero value
+    
+    // Count values in different ranges
+    const percentRange = absValues.filter(v => v > 1 && v <= 100).length;
+    const decimalRange = absValues.filter(v => v > 0 && v < 1).length;
+    const absoluteRange = absValues.filter(v => v > 100).length;
+    
+    // If most values are between 1 and 100, and there are few outliers, they're likely percentages
+    if (percentRange > 0.7 * values.length) {
+      console.log('Auto-detected format: percentage - converting to decimal');
+      return values.map(v => v / 100);
+    }
+    
+    // If most values are small decimals (0.01-0.99), they're likely already in decimal form
+    if (decimalRange > 0.7 * values.length) {
+      console.log('Auto-detected format: decimal - using as is');
+      return values;
+    }
+    
+    // If most values are large (>100), they're likely absolute values
+    if (absoluteRange > 0.7 * values.length) {
+      console.log('Auto-detected format: absolute - using as is');
+      return values;
+    }
+    
+    // If we can't clearly determine, use a more conservative approach
+    // Check the magnitude of values
+    if (maxAbsValue <= 100 && minAbsValue >= 0.01) {
+      console.log('Auto-detected format: percentage (fallback) - converting to decimal');
+      return values.map(v => v / 100);
+    }
+    
+    // Default to using values as-is
+    console.log('Auto-detection inconclusive - using values as-is');
+    return values;
+  }
 };

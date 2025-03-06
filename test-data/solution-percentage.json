@@ -1,0 +1,17 @@
+{
+  "meanReturn": 2.35,
+  "stdDeviation": 2.36,
+  "downsideDeviation": 1.77,
+  "minReturn": -2.0,
+  "maxReturn": 5.0,
+  "positiveReturns": 8,
+  "negativeReturns": 2,
+  "totalReturns": 10,
+  "sharpeRatio": 15.80,
+  "sortinoRatio": 21.10,
+  "annualizedReturn": 358.45,
+  "format": "percentage",
+  "riskFreeRate": 0,
+  "tradingPeriods": 252,
+  "explanation": "These are the expected values when using percentage data format. For percentage inputs like 2.5%, the value is converted to 0.025 for calculation, resulting in a mean return of 0.0235 (displayed as 2.35%). The annualized return is calculated using the compound formula which results in approximately 358% rather than the erroneously high 35,845%."
+} 

@@ -1,3 +1,25 @@
+# Note for Das
+
+This application is designed to calculate Sharpe and Sortino ratios from uploaded spreadsheet data (PnL/returns), providing users with a clear, transparent view of risk-adjusted performance. Users can upload their data, select relevant columns, and specify calculation parameters to obtain precise risk-adjusted performance metrics.
+
+## Key Mathematical Decisions
+
+- **Risk-Free Rate Conversion**: The annual risk-free rate is converted to a per-period rate using the compound interest formula: periodic rate = (1 + annual rate/100)^(1/trading periods) - 1. This ensures an accurate conversion over time periods rather than a simple division.
+
+- **Standard Deviation Choice**: We use the sample standard deviation (n-1) to provide a more conservative estimate of volatility for sample data. This approach is generally accepted in financial statistics, especially with smaller datasets.
+
+- **Downside Deviation Calculation**: For the Sortino ratio, the downside deviation is calculated by dividing the downside variance by the number of negative deviations rather than the total sample size. This method was selected to provide a more accurate assessment of downside risk, resulting in a more conservative Sortino ratio.
+
+- **Data Format Handling**: The app includes explicit data format selection to correctly interpret input returns as either percentages, decimals, or absolute dollar values:
+  - **Auto-detect**: Automatically determines if values are percentages or decimals based on the data range.
+  - **Percentage**: Values like 5 are interpreted as 5% (converted to 0.05 for calculations).
+  - **Decimal**: Values like 0.05 are used directly as 5% in decimal form.
+  - **Absolute ($)**: Values represent absolute dollar amounts (e.g., $33,379) and are used directly without conversion to percentage returns. This is intended for cases where the PnL is provided in absolute terms rather than as a percentage or decimal return.
+
+- **Annualization Factor**: The annualization factor (√trading periods) is applied uniformly to both Sharpe and Sortino ratios, following standard financial practice for converting period-specific metrics to annual terms.
+
+These methodological choices were made to maximize accuracy and transparency in the ratio calculations. Any variations in methodology (e.g., different approaches to calculating downside deviation) are documented to allow for future adjustments based on user feedback and specific use cases.
+
 # Welcome to your Lovable project
 
 ## Project info

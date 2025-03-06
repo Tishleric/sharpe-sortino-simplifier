@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,10 +31,60 @@ interface ResultsProps {
   result: CalculationResult;
   returnValues: number[];
   onReset: () => void;
+  dataFormat: string;
 }
 
-const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
+const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFormat }) => {
   const [activeTab, setActiveTab] = useState('summary');
+
+  // Format value based on data format
+  const formatValue = (value: number, decimals: number = 2): string => {
+    if (dataFormat === 'absolute') {
+      // For absolute values, just show the number with fixed decimals
+      return value.toFixed(decimals);
+    }
+    // For percentages or decimals, use formatPercent
+    return formatPercent(value);
+  };
+
+  // Format label for display
+  const formatValueLabel = (value: number, decimals: number = 2): string => {
+    if (dataFormat === 'absolute') {
+      // For absolute values, don't show percentage sign
+      return `$${value.toFixed(decimals)}`;
+    }
+    // For percentages or decimals, use formatPercent
+    return formatPercent(value);
+  };
+
+  // Format ratio (Sharpe, Sortino) as dimensionless number
+  const formatRatio = (value: number, decimals: number = 2): string => {
+    // Ratios should always be displayed as dimensionless numbers
+    // without percentage signs or other modifications
+    return value.toFixed(decimals);
+  };
+
+  // Format annualized return
+  const formatAnnualizedReturn = (value: number, decimals: number = 2): string => {
+    // First ensure the value is a valid number and not NaN or Infinity
+    const validValue = isFinite(value) ? value : 0;
+    
+    if (dataFormat === 'absolute') {
+      // For absolute values, format as currency with fixed decimals
+      return `$${validValue.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      })}`;
+    }
+    
+    // For percentages or decimals, show with % sign
+    // The annualized return calculation gives us a decimal value (e.g., 3.5845 = 358.45%)
+    // We multiply by 100 to convert to percentage representation
+    return `${(validValue * 100).toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    })}%`;
+  };
 
   // Prepare chart data for returns distribution
   const prepareHistogramData = () => {
@@ -63,7 +112,12 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
     });
     
     return {
-      labels: bins.map(bin => `${formatNumber(bin.min * 100, 2)}% to ${formatNumber(bin.max * 100, 2)}%`),
+      labels: bins.map(bin => {
+        if (dataFormat === 'absolute') {
+          return `$${bin.min.toFixed(2)} to $${bin.max.toFixed(2)}`;
+        }
+        return `${formatNumber(bin.min * 100, 2)}% to ${formatNumber(bin.max * 100, 2)}%`;
+      }),
       datasets: [
         {
           label: 'Return Distribution',
@@ -114,19 +168,24 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
       `Total Data Points,${result.totalReturns}`,
       `Positive Returns,${result.positiveReturns}`,
       `Negative Returns,${result.negativeReturns}`,
-      `Min Return,${formatPercent(result.minReturn)}`,
-      `Max Return,${formatPercent(result.maxReturn)}`,
-      `Mean Return (per period),${formatPercent(result.meanReturn)}`,
-      `Annualized Return,${result.annualizedReturn.toFixed(2)}%`,
-      `Standard Deviation,${formatPercent(result.stdDeviation)}`,
-      `Downside Deviation,${formatPercent(result.downsideDeviation)}`,
+      `Min Return,${formatValue(result.minReturn)}`,
+      `Max Return,${formatValue(result.maxReturn)}`,
+      `Mean Return (per period),${formatValue(result.meanReturn)}`,
+      `Annualized Return,${formatAnnualizedReturn(result.annualizedReturn)}`,
+      `Standard Deviation,${formatValue(result.stdDeviation)}`,
+      `Downside Deviation,${formatValue(result.downsideDeviation)}`,
       "","",
       "RATIO RESULTS",
-      `Sharpe Ratio,${formatNumber(result.sharpeRatio, 4)}`,
-      `Sortino Ratio,${formatNumber(result.sortinoRatio, 4)}`,
+      `Sharpe Ratio,${formatRatio(result.sharpeRatio, 4)}`,
+      `Sortino Ratio,${formatRatio(result.sortinoRatio, 4)}`,
       "","",
       "RAW DATA",
-      ...returnValues.map((val, i) => `${i+1},${formatNumber(val * 100, 6)}%`)
+      ...returnValues.map((val, i) => {
+        if (dataFormat === 'absolute') {
+          return `${i+1},${val.toFixed(6)}`;
+        }
+        return `${i+1},${formatNumber(val * 100, 6)}%`;
+      })
     ];
     
     const csvContent = lines.join('\n');
@@ -155,7 +214,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
               <CardTitle className="text-lg flex items-center gap-2">
                 Sharpe Ratio
                 <span className="text-3xl font-bold ml-auto">
-                  {formatNumber(result.sharpeRatio, 2)}
+                  {formatRatio(result.sharpeRatio, 2)}
                 </span>
               </CardTitle>
               <CardDescription>
@@ -167,13 +226,13 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                 <div className="grid grid-cols-2 gap-2">
                   <span>Mean Return:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatPercent(result.meanReturn)}
+                    {formatValue(result.meanReturn)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span>Standard Deviation:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatPercent(result.stdDeviation)}
+                    {formatValue(result.stdDeviation)}
                   </span>
                 </div>
               </div>
@@ -185,7 +244,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
               <CardTitle className="text-lg flex items-center gap-2">
                 Sortino Ratio
                 <span className="text-3xl font-bold ml-auto">
-                  {formatNumber(result.sortinoRatio, 2)}
+                  {formatRatio(result.sortinoRatio, 2)}
                 </span>
               </CardTitle>
               <CardDescription>
@@ -197,13 +256,13 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                 <div className="grid grid-cols-2 gap-2">
                   <span>Mean Return:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatPercent(result.meanReturn)}
+                    {formatValue(result.meanReturn)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span>Downside Deviation:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatPercent(result.downsideDeviation)}
+                    {formatValue(result.downsideDeviation)}
                   </span>
                 </div>
               </div>
@@ -255,7 +314,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                       <div className="bg-card p-3 rounded-md shadow-subtle">
                         <div className="text-muted-foreground text-xs">Annualized Return</div>
                         <div className="text-lg font-semibold mt-1">
-                          {result.annualizedReturn.toFixed(2)}%
+                          {formatAnnualizedReturn(result.annualizedReturn, 2)}
                         </div>
                       </div>
                       <div className="bg-card p-3 rounded-md shadow-subtle">
@@ -289,23 +348,23 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset }) => {
                     <TableBody>
                       <TableRow>
                         <TableCell>Mean Return (per period)</TableCell>
-                        <TableCell className="text-right font-medium">{formatPercent(result.meanReturn)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatValue(result.meanReturn)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Standard Deviation</TableCell>
-                        <TableCell className="text-right font-medium">{formatPercent(result.stdDeviation)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatValue(result.stdDeviation)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Downside Deviation</TableCell>
-                        <TableCell className="text-right font-medium">{formatPercent(result.downsideDeviation)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatValue(result.downsideDeviation)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Minimum Return</TableCell>
-                        <TableCell className="text-right font-medium text-destructive">{formatPercent(result.minReturn)}</TableCell>
+                        <TableCell className="text-right font-medium text-destructive">{formatValue(result.minReturn)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Maximum Return</TableCell>
-                        <TableCell className="text-right font-medium text-success-DEFAULT">{formatPercent(result.maxReturn)}</TableCell>
+                        <TableCell className="text-right font-medium text-success-DEFAULT">{formatValue(result.maxReturn)}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
