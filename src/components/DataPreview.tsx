@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowRight, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ParsedData, extractValidNumbers } from '@/utils/fileUtils';
+import { ParsedData, extractValidNumbers, isExcelDate, formatExcelDate } from '@/utils/fileUtils';
 import { CalculationParams } from '@/utils/calculationUtils';
 
 interface DataPreviewProps {
@@ -163,7 +163,9 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
                         key={cellIndex}
                         className={cellIndex === columnIndex ? 'bg-primary/5 font-medium' : ''}
                       >
-                        {String(cell)}
+                        {typeof cell === 'number' && isExcelDate(cell)
+                          ? formatExcelDate(cell) // Fallback for unconverted dates
+                          : String(cell)}
                       </TableCell>
                     ))}
                   </TableRow>

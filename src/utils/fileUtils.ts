@@ -18,9 +18,17 @@ export const supportedFileTypes = [
 // Excel dates are serial numbers counting days since Jan 1, 1900
 // Modern dates typically have values between 40000-50000
 export const isExcelDate = (value: number): boolean => {
-  return typeof value === 'number' && 
-    value > 35000 && value < 60000 && // Range for dates between ~1995 and ~2060
-    Math.floor(value) === value || Math.abs(Math.floor(value) - value) > 0.99; // Integer or very close to it
+  if (typeof value !== 'number') return false;
+  
+  // Check if the value is within a reasonable Excel date range (1995–2060, roughly 35000–60000)
+  if (value < 35000 || value > 60000) return false;
+  
+  // Allow both integers and decimals (fractional for time components)
+  const integerPart = Math.floor(value);
+  const decimalPart = value - integerPart;
+  
+  // If it's an integer or has a decimal part typical of Excel dates (0 ≤ decimal < 1)
+  return integerPart >= 35000 && integerPart <= 60000 && decimalPart >= 0 && decimalPart < 1;
 };
 
 // Convert Excel date number to formatted date string
@@ -58,38 +66,15 @@ export const parseFile = async (file: File): Promise<ParsedData | null> => {
     // Extract data rows
     const rows = rawData.slice(1) as (string | number)[][];
     
-    // Date conversion is disabled by default to preserve original data format
-    // We'll keep the detection code here but commented out
-    
-    /*
-    // Look for date columns and convert Excel dates to readable format
-    for (let colIndex = 0; colIndex < headers.length; colIndex++) {
-      // Check if the column header contains "date" or similar terms
-      const isDateColumn = headers[colIndex].toLowerCase().includes('date') || 
-                          headers[colIndex].toLowerCase().includes('time');
-      
-      // Check the first few values to see if they look like Excel dates
-      let excelDateCount = 0;
-      const sampleSize = Math.min(5, rows.length);
-      
-      for (let rowIndex = 0; rowIndex < sampleSize; rowIndex++) {
+    // Convert numeric Excel dates (including fractional dates with times) to readable strings in all cells
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      for (let colIndex = 0; colIndex < rows[rowIndex].length; colIndex++) {
         const value = rows[rowIndex][colIndex];
         if (typeof value === 'number' && isExcelDate(value)) {
-          excelDateCount++;
-        }
-      }
-      
-      // If most of the sampled values look like Excel dates, convert the column
-      if (isDateColumn || excelDateCount > sampleSize / 2) {
-        for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-          const value = rows[rowIndex][colIndex];
-          if (typeof value === 'number' && isExcelDate(value)) {
-            rows[rowIndex][colIndex] = formatExcelDate(value);
-          }
+          rows[rowIndex][colIndex] = formatExcelDate(value);
         }
       }
     }
-    */
     
     return {
       headers,
