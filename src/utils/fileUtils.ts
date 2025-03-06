@@ -135,24 +135,34 @@ export const cleanNumericValue = (value: any): number | null => {
   return isNaN(numValue) ? null : numValue;
 };
 
-export const extractValidNumbers = (data: any[], columnIndex: number, dataFormat: string = 'auto'): number[] => {
+export const extractValidNumbers = (
+  data: any[],
+  columnIndex: number,
+  dataFormat: string = 'auto'
+): { values: number[], detectedFormat: string } => {
   // Extract and filter valid numeric values
   const values = data
     .map(row => cleanNumericValue(row[columnIndex]))
     .filter((value): value is number => value !== null);
   
-  if (values.length === 0) return [];
+  if (values.length === 0) return { values: [], detectedFormat: 'unknown' };
   
   // Process values based on specified format or auto-detect
+  let processedValues: number[];
+  let format: string;
+
   if (dataFormat === 'percent') {
     // User explicitly specified percentage format (5 means 5%)
-    return values.map(v => v / 100);
+    processedValues = values.map(v => v / 100);
+    format = 'percent';
   } else if (dataFormat === 'decimal') {
     // User explicitly specified decimal format (0.05 means 5%)
-    return values;
+    processedValues = values;
+    format = 'decimal';
   } else if (dataFormat === 'absolute') {
     // User explicitly specified absolute dollar values - use as-is
-    return values;
+    processedValues = values;
+    format = 'absolute';
   } else {
     // Auto-detect format - with more rigorous checks
     // Sample all values for a more accurate assessment
@@ -168,30 +178,39 @@ export const extractValidNumbers = (data: any[], columnIndex: number, dataFormat
     // If most values are between 1 and 100, and there are few outliers, they're likely percentages
     if (percentRange > 0.7 * values.length) {
       console.log('Auto-detected format: percentage - converting to decimal');
-      return values.map(v => v / 100);
+      processedValues = values.map(v => v / 100);
+      format = 'percent';
     }
     
     // If most values are small decimals (0.01-0.99), they're likely already in decimal form
-    if (decimalRange > 0.7 * values.length) {
+    else if (decimalRange > 0.7 * values.length) {
       console.log('Auto-detected format: decimal - using as is');
-      return values;
+      processedValues = values;
+      format = 'decimal';
     }
     
     // If most values are large (>100), they're likely absolute values
-    if (absoluteRange > 0.7 * values.length) {
+    else if (absoluteRange > 0.7 * values.length) {
       console.log('Auto-detected format: absolute - using as is');
-      return values;
+      processedValues = values;
+      format = 'absolute';
     }
     
     // If we can't clearly determine, use a more conservative approach
     // Check the magnitude of values
-    if (maxAbsValue <= 100 && minAbsValue >= 0.01) {
+    else if (maxAbsValue <= 100 && minAbsValue >= 0.01) {
       console.log('Auto-detected format: percentage (fallback) - converting to decimal');
-      return values.map(v => v / 100);
+      processedValues = values.map(v => v / 100);
+      format = 'percent';
     }
     
     // Default to using values as-is
-    console.log('Auto-detection inconclusive - using values as-is');
-    return values;
+    else {
+      console.log('Auto-detection inconclusive - using values as-is');
+      processedValues = values;
+      format = 'decimal';
+    }
   }
+
+  return { values: processedValues, detectedFormat: format };
 };

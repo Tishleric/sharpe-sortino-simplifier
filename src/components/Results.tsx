@@ -398,7 +398,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                         <h3 className="font-medium">About The Calculation</h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           These ratios help compare investment returns on a risk-adjusted basis.
-                          Higher ratios indicate better risk-adjusted performance.
+                          Higher ratios indicate better risk-adjusted performance. All calculations are annualized for consistency.
                         </p>
                       </div>
                     </div>
@@ -409,11 +409,20 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                         Sharpe Ratio
                       </h4>
                       <p className="text-sm mb-3">
-                        The Sharpe ratio divides the excess return over the risk-free rate by the standard deviation of returns.
+                        The Sharpe ratio measures the excess return per unit of total risk, using the sample standard deviation to account for variability in returns.
                       </p>
                       <div className="bg-white p-3 rounded-md border text-sm font-mono">
                         Sharpe = (Mean Return - Risk Free Rate) / Standard Deviation × √(Trading Periods)
                       </div>
+                      <p className="text-sm mt-2">
+                        Where:
+                        <ul className="list-disc pl-5 mt-1">
+                          <li><strong>Mean Return</strong>: Average of periodic returns (e.g., daily or monthly)</li>
+                          <li><strong>Risk Free Rate</strong>: Periodic risk-free rate, derived from the annual rate</li>
+                          <li><strong>Standard Deviation</strong>: Sample standard deviation (n-1 denominator) of periodic returns</li>
+                          <li><strong>Trading Periods</strong>: Number of periods per year (e.g., 252 for daily) for annualization</li>
+                        </ul>
+                      </p>
                     </div>
                     
                     <div className="bg-muted/40 rounded-md p-4">
@@ -422,13 +431,45 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                         Sortino Ratio
                       </h4>
                       <p className="text-sm mb-3">
-                        The Sortino ratio is similar to Sharpe but only considers downside risk (negative returns).
+                        The Sortino ratio refines the Sharpe ratio by focusing solely on downside risk, penalizing only negative deviations from the target return.
                       </p>
                       <div className="bg-white p-3 rounded-md border text-sm font-mono">
                         Sortino = (Mean Return - Risk Free Rate) / Downside Deviation × √(Trading Periods)
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Downside deviation only considers returns below the target (or risk-free rate if no target is specified).
+                      <p className="text-sm mt-2">
+                        Where:
+                        <ul className="list-disc pl-5 mt-1">
+                          <li><strong>Downside Deviation</strong>: Sample standard deviation of returns below the target return (or risk-free rate if unspecified), considering only negative deviations</li>
+                        </ul>
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted/40 rounded-md p-4">
+                      <h4 className="font-medium mb-2">Data Format Handling</h4>
+                      <p className="text-sm mb-3">
+                        The software supports multiple return formats, processed as follows:
+                      </p>
+                      <ul className="list-disc pl-5 text-sm">
+                        <li><strong>Percentage</strong>: Values like 5 are treated as 5% (divided by 100)</li>
+                        <li><strong>Decimal</strong>: Values like 0.05 are treated as 5%</li>
+                        <li><strong>Absolute</strong>: Dollar amounts (PnL); if a starting portfolio value is provided, percentage returns are computed dynamically by updating the portfolio value each period</li>
+                        <li><strong>Auto</strong>: Format is inferred from data magnitude</li>
+                      </ul>
+                      <p className="text-sm mt-2">
+                        For absolute returns without a portfolio value, ratios are calculated directly, but results may not align with standard benchmarks.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted/40 rounded-md p-4">
+                      <h4 className="font-medium mb-2">Risk-Free Rate Conversion</h4>
+                      <p className="text-sm mb-3">
+                        The annual risk-free rate is adjusted to match the periodicity of returns:
+                      </p>
+                      <div className="bg-white p-3 rounded-md border text-sm font-mono">
+                        Periodic Rate = (1 + Annual Rate)^(1 / Trading Periods) - 1
+                      </div>
+                      <p className="text-sm mt-2">
+                        This ensures the risk-free rate aligns with the return intervals (e.g., daily, monthly).
                       </p>
                     </div>
                   </div>
@@ -442,7 +483,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                       <li>Generally, a Sharpe ratio above 1.0 is considered acceptable</li>
                       <li>A ratio above 2.0 is considered very good</li>
                       <li>Sortino ratios tend to be higher than Sharpe when losses are infrequent</li>
-                      <li>These ratios should be used as one of multiple metrics to evaluate performance</li>
+                      <li>These ratios should be used alongside other metrics to evaluate performance</li>
                     </ul>
                   </div>
                 </div>

@@ -55,6 +55,11 @@ export const calculateSharpeAndSortino = (
     params 
   });
 
+  // Check for absolute format without portfolio value
+  if (params.dataFormat === 'absolute' && !params.portfolioValue) {
+    throw new Error('Portfolio value is required for absolute returns to calculate ratios accurately');
+  }
+
   // Determine if we're working with absolute returns
   const isAbsoluteFormat = params.dataFormat === 'absolute';
   

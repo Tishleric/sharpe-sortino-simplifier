@@ -56,18 +56,24 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
       return;
     }
 
-    // Optional validation for portfolio value if data format is absolute
-    if (dataFormat === 'absolute' && portfolioValue && portfolio <= 0) {
-      toast.error('Portfolio value must be greater than zero');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Extract numeric data from the selected column
-      const numericValues = extractValidNumbers(data.rows, columnIndex, dataFormat);
-      
+      // Extract numeric data and detected format
+      const { values: numericValues, detectedFormat } = extractValidNumbers(
+        data.rows,
+        columnIndex,
+        dataFormat
+      );
+      const effectiveFormat = dataFormat === 'auto' ? detectedFormat : dataFormat;
+
+      // Validate portfolio value for absolute returns
+      if (effectiveFormat === 'absolute' && (!portfolio || portfolio <= 0)) {
+        toast.error('Portfolio value is required and must be greater than zero for absolute returns');
+        setIsLoading(false);
+        return;
+      }
+
       if (numericValues.length < 10) {
         toast.error('Not enough valid numeric data points (minimum 10 required)');
         setIsLoading(false);
@@ -77,15 +83,15 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
       const params: CalculationParams = {
         riskFreeRate: riskFree,
         tradingPeriods: periods,
-        targetReturn: target
+        targetReturn: target,
+        dataFormat: effectiveFormat, // Use effective format
       };
 
-      // Add portfolio value to params if provided
       if (portfolio) {
         params.portfolioValue = portfolio;
       }
 
-      onProceed(numericValues, params, dataFormat);
+      onProceed(numericValues, params, effectiveFormat);
     } catch (error) {
       console.error('Error processing data:', error);
       toast.error('Failed to process data. Please try again.');
@@ -318,7 +324,13 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
                     onChange={(e) => setPortfolioValue(e.target.value)}
                     className="input-number-clean"
                     placeholder="e.g., 100000"
+                    required={dataFormat === 'absolute'}
                   />
+                  {dataFormat === 'absolute' && (
+                    <p className="text-sm text-muted-foreground">
+                      Required for accurate ratio calculations with absolute returns.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
