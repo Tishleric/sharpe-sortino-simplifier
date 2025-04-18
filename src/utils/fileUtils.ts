@@ -134,26 +134,34 @@ export const extractValidNumbers = (
   
   // Process values based on specified format or auto-detect
   let processedValues: number[];
-  let format: string;
+  let detectedFormat: string;
 
   if (dataFormat === 'percent') {
     // User explicitly specified percentage format (5 means 5%)
     processedValues = values.map(v => v / 100);
-    format = 'percent';
+    detectedFormat = 'percent';
   } else if (dataFormat === 'decimal') {
     // User explicitly specified decimal format (0.05 means 5%)
     processedValues = values;
-    format = 'decimal';
+    detectedFormat = 'decimal';
   } else if (dataFormat === 'absolute') {
     // User explicitly specified absolute dollar values - use as-is
     processedValues = values;
-    format = 'absolute';
+    detectedFormat = 'absolute';
   } else {
     // Auto-detect format - with more rigorous checks
     // Sample all values for a more accurate assessment
     const absValues = values.map(v => Math.abs(v));
     const maxAbsValue = Math.max(...absValues);
     const minAbsValue = Math.min(...absValues.filter(v => v > 0)); // Smallest non-zero value
+    
+    const ABSOLUTE_THRESHOLD = 1000;  // > $1,000 = treat as absolute
+    if (maxAbsValue > ABSOLUTE_THRESHOLD) {
+      console.log('Auto-detected format: absolute (large values) - using as is');
+      processedValues = values;
+      detectedFormat = 'absolute';
+      return { values: processedValues, detectedFormat };
+    }
     
     // Count values in different ranges
     const percentRange = absValues.filter(v => v > 1 && v <= 100).length;
@@ -164,21 +172,21 @@ export const extractValidNumbers = (
     if (percentRange > 0.7 * values.length) {
       console.log('Auto-detected format: percentage - converting to decimal');
       processedValues = values.map(v => v / 100);
-      format = 'percent';
+      detectedFormat = 'percent';
     }
     
     // If most values are small decimals (0.01-0.99), they're likely already in decimal form
     else if (decimalRange > 0.7 * values.length) {
       console.log('Auto-detected format: decimal - using as is');
       processedValues = values;
-      format = 'decimal';
+      detectedFormat = 'decimal';
     }
     
     // If most values are large (>100), they're likely absolute values
     else if (absoluteRange > 0.7 * values.length) {
       console.log('Auto-detected format: absolute - using as is');
       processedValues = values;
-      format = 'absolute';
+      detectedFormat = 'absolute';
     }
     
     // If we can't clearly determine, use a more conservative approach
@@ -186,16 +194,16 @@ export const extractValidNumbers = (
     else if (maxAbsValue <= 100 && minAbsValue >= 0.01) {
       console.log('Auto-detected format: percentage (fallback) - converting to decimal');
       processedValues = values.map(v => v / 100);
-      format = 'percent';
+      detectedFormat = 'percent';
     }
     
     // Default to using values as-is
     else {
       console.log('Auto-detection inconclusive - using values as-is');
       processedValues = values;
-      format = 'decimal';
+      detectedFormat = 'decimal';
     }
   }
 
-  return { values: processedValues, detectedFormat: format };
+  return { values: processedValues, detectedFormat };
 };

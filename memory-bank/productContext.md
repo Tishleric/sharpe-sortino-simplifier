@@ -1,5 +1,14 @@
 # Product Context
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+This sprint extends the original product context with the following user experience and product goals:
+- Improved calculation accuracy (geometric mean, correct downside deviation, fractional returns enforcement)
+- Rolling Sharpe statistics and new visualizations for deeper performance insight
+- Enhanced results display (2 dp, % for small values, Sharpe SE display)
+- Better data preview (scrollable, footer exclusion)
+- Excel export overhaul for auditability and clarity
+
 ## Problem Statement
 Financial analysts, traders, and investors need to evaluate investment performance on a risk-adjusted basis. Raw returns are insufficient for comparison without accounting for the level of risk taken to achieve those returns. Existing tools for calculating these metrics often:
 

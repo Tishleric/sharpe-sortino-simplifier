@@ -1,5 +1,26 @@
 # Project Progress
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+**In Progress:**
+- Math engine: Replace arithmetic-mean annualisation with geometric mean (CAGR)
+- Math engine: Downside deviation uses (m-1) denominator
+- Math engine: Force fractional returns; block calc if portfolioValue missing for absolute data
+- Math engine: Expose sharpeSE and excessReturn in results
+- Results: All numbers 2 dp; show % if |value| < 1
+- Results: Under Sharpe add “± SE” in smaller grey text
+- Results: Hide annualisation toggle (assume sub-annual data)
+- Rolling stats: Compute 30/60/90-day rolling Sharpe
+- Rolling stats: Plotly chart (3 traces), Tailwind themed, in Results Accordion
+- Data preview: Make table scrollable (max-h-64, overflow-auto)
+- Data preview: Add “Mark last row as footer” toggle (excluded from calcs/exports)
+- Excel export: Sheet 1 = raw data + live-formula columns (geo mean, σ, downside σ, Sharpe, Sortino, SE)
+- Excel export: Sheet 2 = static app results, step-by-step with comments
+- Excel export: All cells 2 dp (% where appropriate)
+- Excel export: Risk-free cell = 0 if blank
+- Formatting: Remove unused props/imports
+- Housekeeping: Update test-data JSON gold-sets to match new engine
+
 ## What Works
 
 - **Core Functionality**
@@ -29,11 +50,7 @@
 
 ## What's Left to Build
 
-- **Potential Enhancements**
-  - Support for more complex return series (irregular intervals)
-  - Addition of other risk-adjusted metrics (e.g., Calmar ratio, Omega ratio)
-  - Comparative analysis features for multiple data series
-  - Enhanced visualization options
+Sprint-01 (see above) is the current focus. All other enhancements are deferred until this sprint is complete.
 
 ## Known Issues
 

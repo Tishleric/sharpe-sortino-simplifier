@@ -9,7 +9,8 @@ export type CalculationParams = {
 export type CalculationResult = {
   sharpeRatio: number;
   sortinoRatio: number;
-  meanReturn: number;
+  meanReturn: number;       // arithmetic mean
+  geoMean: number;          // geometric mean (CAGR base)
   stdDeviation: number;
   downsideDeviation: number;
   totalReturns: number;
@@ -18,6 +19,8 @@ export type CalculationResult = {
   minReturn: number;
   maxReturn: number;
   annualizedReturn: number;
+  sharpeSE: number;         // Standard error of Sharpe ratio
+  excessReturn: number;     // Mean return minus risk-free rate
 };
 
 /**
@@ -55,46 +58,51 @@ export const calculateSharpeAndSortino = (
     params 
   });
 
-  // Check for absolute format without portfolio value
+  // 1. Enforce fractional returns for absolute data
   if (params.dataFormat === 'absolute' && !params.portfolioValue) {
     throw new Error('Portfolio value is required for absolute returns to calculate ratios accurately');
   }
 
-  // Determine if we're working with absolute returns
   const isAbsoluteFormat = params.dataFormat === 'absolute';
-  
-  // Store original returns for reporting
   const originalReturns = [...returns];
-  
-  // For absolute returns, attempt to convert to fractional returns if portfolio value is provided
-  let returnsForCalculation = [...returns];
-  let fractionalConverted = false;
-  
-  if (isAbsoluteFormat && params.portfolioValue) {
-    const { convertedReturns, wasConverted } = convertToFractionalReturns(returns, params.portfolioValue);
-    if (wasConverted) {
-      returnsForCalculation = convertedReturns;
-      fractionalConverted = true;
-      console.log('Using converted fractional returns for ratio calculations');
-    } else {
-      console.log('WARNING: Using absolute dollar returns for ratio calculations. For standard financial metrics, consider providing a portfolio value.');
-    }
-  } else if (isAbsoluteFormat) {
+  const { convertedReturns, wasConverted } =
+    isAbsoluteFormat && params.portfolioValue
+      ? convertToFractionalReturns(returns, params.portfolioValue)
+      : { convertedReturns: returns, wasConverted: false };
+
+  if (isAbsoluteFormat && !params.portfolioValue) {
     console.log('WARNING: Using absolute dollar returns for ratio calculations. For standard financial metrics, consider converting to fractional returns.');
   }
 
-  // Convert annual risk-free rate to the period used in data (e.g., daily, monthly)
-  const periodicRiskFreeRate = Math.pow(1 + params.riskFreeRate / 100, 1 / params.tradingPeriods) - 1;
+  const returnsForCalculation = convertedReturns;
+  Object.freeze(returnsForCalculation);
+  console.log('Length after conversion', returnsForCalculation.length);
+  console.log('First 10 returnsForCalculation', returnsForCalculation.slice(0,10));
+  console.log('Arithmetic mean check', returnsForCalculation
+              .reduce((s,r)=>s+r,0)/returnsForCalculation.length);
   
-  // Apply the same conversion to target return if provided, otherwise use the periodic risk-free rate
+  const fractionalConverted = wasConverted;
+
+  // Convert annual risk-free rate to periodic using compound formula
+  const periodicRiskFreeRate = Math.pow(1 + params.riskFreeRate / 100, 1 / params.tradingPeriods) - 1;
+  // Target return conversion (if provided)
   const targetReturn = params.targetReturn !== undefined 
     ? Math.pow(1 + params.targetReturn / 100, 1 / params.tradingPeriods) - 1
     : periodicRiskFreeRate;
 
-  // Calculate mean return using the appropriate returns array
+  // 2. Geometric mean (CAGR) for annualisation
+  // Calculate geometric mean of returns: exp(mean(log(1+r))) - 1
+  const gm = Math.exp(
+    returnsForCalculation.reduce((s, r) => s + Math.log(1 + r), 0) / returnsForCalculation.length
+  ) - 1;
+  
+  // 3. Annualized return using geometric mean only
+  const annualizedReturn = Math.pow(1 + gm, params.tradingPeriods) - 1;
+
+  // Calculate arithmetic mean (for Sharpe/Sortino and excess return)
   const meanReturn = returnsForCalculation.reduce((sum, val) => sum + val, 0) / returnsForCalculation.length;
 
-  // Calculate standard deviation
+  // Standard deviation (sample, n-1)
   const variance = returnsForCalculation.reduce((sum, val) => sum + Math.pow(val - meanReturn, 2), 0) / (returnsForCalculation.length - 1);
   const stdDeviation = Math.sqrt(variance);
 
@@ -105,93 +113,55 @@ export const calculateSharpeAndSortino = (
     periodicRiskFreeRate,
     targetReturn,
     isAbsoluteFormat,
-    fractionalConverted
+    fractionalConverted,
+    gm,
+    annualizedReturn
   });
 
-  // Calculate downside deviation (only negative returns relative to target)
+  // 3. Downside deviation: use (m-1) denominator, fallback to 1 if only one value
   const negativeDeviations = returnsForCalculation
     .filter(r => r < targetReturn)
     .map(r => Math.pow(targetReturn - r, 2));
-  
-  const downsideVariance = negativeDeviations.length > 0 
-    ? negativeDeviations.reduce((sum, val) => sum + val, 0) / negativeDeviations.length
+  const downsideVariance = negativeDeviations.length > 0
+    ? negativeDeviations.reduce((sum, val) => sum + val, 0) / ((negativeDeviations.length - 1) || 1)
     : 0;
   const downsideDeviation = Math.sqrt(downsideVariance);
 
-  // Calculate Sharpe and Sortino ratios
+  // 4. Calculate Sharpe and Sortino ratios, excess return, and Sharpe SE
   const excessReturn = meanReturn - periodicRiskFreeRate;
   const annualizationFactor = Math.sqrt(params.tradingPeriods);
-
-  // Define a small epsilon threshold to avoid division by very small numbers
   const EPSILON = 1e-8;
-
-  // Calculate Sharpe ratio with protection against near-zero standard deviation
   let sharpeRatio = 0;
   if (stdDeviation > EPSILON) {
-    // Calculate Sharpe ratio: (mean return - risk free rate) / standard deviation
-    // Annualization is done by multiplying by sqrt(trading periods)
     sharpeRatio = (excessReturn / stdDeviation) * annualizationFactor;
-    
     if (isAbsoluteFormat && !fractionalConverted) {
       console.log('NOTE: Sharpe ratio calculated using absolute returns may not be comparable to standard benchmarks.');
     }
   }
-
-  // Calculate Sortino ratio with the same protections
   let sortinoRatio = 0;
   if (downsideDeviation > EPSILON) {
-    // Calculate Sortino ratio: (mean return - risk free rate) / downside deviation
     sortinoRatio = (excessReturn / downsideDeviation) * annualizationFactor;
-    
     if (isAbsoluteFormat && !fractionalConverted) {
       console.log('NOTE: Sortino ratio calculated using absolute returns may not be comparable to standard benchmarks.');
     }
   }
+  // Sharpe standard error (SE) formula
+  const sharpeSE = (returnsForCalculation.length > 1)
+    ? Math.sqrt((1 + 0.5 * Math.pow(sharpeRatio, 2)) / (returnsForCalculation.length - 1))
+    : 0;
 
   // Additional statistics - use original returns for reporting
-  const originalMeanReturn = originalReturns.reduce((sum, val) => sum + val, 0) / originalReturns.length;
   const positiveReturns = originalReturns.filter(r => r >= 0).length;
   const negativeReturns = originalReturns.filter(r => r < 0).length;
   const minReturn = Math.min(...originalReturns);
   const maxReturn = Math.max(...originalReturns);
-  
-  // Calculate annualized return differently based on data format
-  let annualizedReturn;
-  if (params.dataFormat === 'absolute') {
-    // For absolute dollar values, use a simple yearly projection
-    annualizedReturn = originalMeanReturn * params.tradingPeriods;
-    
-    console.log(`Absolute format annualized return calculation:
-      Mean return per period: $${originalMeanReturn}
-      Trading periods per year: ${params.tradingPeriods}
-      Simple annualization formula: $${originalMeanReturn} * ${params.tradingPeriods}
-      Result: $${annualizedReturn}`);
-  } else {
-    // For percentage/decimal returns, use the compound interest formula
-    try {
-      // Apply standard compound interest formula
-      annualizedReturn = Math.pow(1 + originalMeanReturn, params.tradingPeriods) - 1;
-      
-      // Debug logging 
-      console.log(`Percentage/decimal annualized return: 
-        Base: (1 + ${originalMeanReturn})
-        Exponent: ${params.tradingPeriods}
-        Formula: (1 + ${originalMeanReturn})^${params.tradingPeriods} - 1
-        Result: ${annualizedReturn}
-        As percentage: ${annualizedReturn * 100}%`);
-      
-    } catch (error) {
-      // Fallback to simple multiplication if math error occurs
-      console.warn("Error calculating annualized return using compound formula, falling back to simple approach");
-      annualizedReturn = originalMeanReturn * params.tradingPeriods;
-    }
-  }
-  
+
   // Log the final results
   console.log('Final calculation results:', {
     sharpeRatio,
     sortinoRatio,
-    meanReturn: originalMeanReturn, // Report the original mean for UI consistency
+    meanReturn,
+    geoMean: gm,
     stdDeviation,
     downsideDeviation,
     totalReturns: originalReturns.length,
@@ -200,12 +170,15 @@ export const calculateSharpeAndSortino = (
     minReturn,
     maxReturn,
     annualizedReturn,
+    sharpeSE,
+    excessReturn
   });
 
   return {
     sharpeRatio,
     sortinoRatio,
-    meanReturn: originalMeanReturn, // Report the original mean for UI consistency
+    meanReturn,
+    geoMean: gm,
     stdDeviation,
     downsideDeviation,
     totalReturns: originalReturns.length,
@@ -214,6 +187,8 @@ export const calculateSharpeAndSortino = (
     minReturn,
     maxReturn,
     annualizedReturn,
+    sharpeSE,
+    excessReturn
   };
 };
 

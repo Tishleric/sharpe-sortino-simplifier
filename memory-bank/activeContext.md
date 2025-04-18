@@ -1,5 +1,36 @@
 # Active Context
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+### A. Math engine correctness
+- Replace arithmetic-mean annualisation with geometric mean (true CAGR).
+- Downside deviation: use (m-1) denominator.
+- Force fractional returns; block calc if portfolioValue missing when dataFormat = 'absolute'.
+- Expose sharpeSE (standard error) and excessReturn in result object.
+
+### B. Results display
+- All numbers 2 dp; show % whenever |value| < 1.
+- Under Sharpe add "± SE" in smaller grey text.
+- Hide annualisation toggle (assume sub-annual data).
+
+### C. Rolling statistics
+- Compute 30/60/90-day rolling Sharpe.
+- Plotly chart (3 traces) themed with Tailwind colours; embed at bottom of Results page inside new Accordion "Rolling Performance".
+
+### D. Data preview improvements
+- Make preview table scrollable (max-h-64) with overflow-auto.
+- Add "Mark last row as footer" toggle; excluded row must not enter calculations or exports.
+
+### E. Excel export overhaul
+- Sheet 1: Raw data + live-formula columns (geometric mean, σ, downside σ, Sharpe, Sortino, SE).
+- Sheet 2: Static copy of app results, laid out step-by-step with brief comments.
+- All cells formatted 2 dp (% where appropriate).
+- Put 0 in risk-free cell if user left it blank.
+
+### F. Formatting & housekeeping
+- Remove unused props/imports.
+- Update test-data JSON gold-sets to match new engine.
+
 ## Current Status
 The Sharpe & Sortino Ratio Calculator is a complete, functional application that successfully implements all core functionality. The application follows a three-step workflow:
 
@@ -16,18 +47,7 @@ The Sharpe & Sortino Ratio Calculator is a complete, functional application that
 - Addition of educational content explaining the ratios and their interpretation
 
 ## Current Focus
-We've been improving the reliability and transparency of the Sharpe & Sortino ratio calculator, focusing on:
-
-1. **Debugging and fixing calculation issues** - We investigated why downside deviation sometimes appeared as "0.00" in the UI and determined it was due to rounding precision (values like 0.0042 displaying as 0.00 with 2 decimal places).
-
-2. **Enhancing Excel exports** - We've completely redesigned the Excel export functionality to provide a proper audit trail of all calculations:
-   - Added "Inputs & Summary", "Breakdown", and "Methodology" sheets
-   - Implemented live formula cells referencing raw data and parameters
-   - Fixed sheet name quoting in Excel formulas
-   - Ensured target return defaults to 0 if not specified to prevent formula errors
-   - Created a professional layout that makes calculations fully transparent and verifiable
-
-3. **Improving chart reliability** - Modified histogram binning logic to ensure no bin overlaps zero, giving a clearer picture of positive vs. negative returns.
+Sprint-01 is now the immediate priority. All development is focused on implementing and verifying the changes outlined above to improve calculation accuracy, user experience, and export fidelity.
 
 ## Active Decisions and Considerations
 
@@ -50,9 +70,9 @@ We've been improving the reliability and transparency of the Sharpe & Sortino ra
 - Focused on making the export a true audit/validation tool that matches UI calculations to the decimal
 
 ## Next Steps
-- Perform thorough testing with diverse datasets
-- Consider any UI improvements based on user feedback
-- Document the methodology and calculation precision improvements
+- Implement Sprint-01 features as described above
+- Thoroughly test all new and updated functionality
+- Update documentation and gold-set test data to match new engine
 
 ## Open Questions
 - Should the application support more complex portfolio analysis?

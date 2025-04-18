@@ -209,10 +209,11 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
       `Negative Returns,${result.negativeReturns}`,
       `Min Return,${formatValue(result.minReturn)}`,
       `Max Return,${formatValue(result.maxReturn)}`,
-      `Mean Return (per period),${formatValue(result.meanReturn)}`,
-      `Annualized Return,${formatAnnualizedReturn(result.annualizedReturn)}`,
+      `Mean Return (per period),${formatPercent(result.meanReturn, 2)}`,
+      `Annualized Return,${formatPercent(result.annualizedReturn, 2)}`,
       `Standard Deviation,${formatValue(result.stdDeviation)}`,
       `Downside Deviation,${formatValue(result.downsideDeviation)}`,
+      `Geometric Mean (CAGR base),${formatPercent(result.geoMean, 2)}`,
       "","",
       "RATIO RESULTS",
       `Sharpe Ratio,${formatRatio(result.sharpeRatio, 4)}`,
@@ -265,7 +266,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                 <div className="grid grid-cols-2 gap-2">
                   <span>Mean Return:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatValue(result.meanReturn)}
+                    {formatPercent(result.meanReturn, 2)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -295,7 +296,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                 <div className="grid grid-cols-2 gap-2">
                   <span>Mean Return:</span>
                   <span className="font-medium text-foreground text-right">
-                    {formatValue(result.meanReturn)}
+                    {formatPercent(result.meanReturn, 2)}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -362,7 +363,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                       <div className="bg-card p-3 rounded-md shadow-subtle">
                         <div className="text-muted-foreground text-xs">Annualized Return</div>
                         <div className="text-lg font-semibold mt-1">
-                          {formatAnnualizedReturn(result.annualizedReturn, 2)}
+                          {formatPercent(result.annualizedReturn, 2)}
                         </div>
                       </div>
                       <div className="bg-card p-3 rounded-md shadow-subtle">
@@ -396,7 +397,11 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                     <TableBody>
                       <TableRow>
                         <TableCell>Mean Return (per period)</TableCell>
-                        <TableCell className="text-right font-medium">{formatValue(result.meanReturn)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatPercent(result.meanReturn, 2)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Geometric Mean (CAGR base)</TableCell>
+                        <TableCell className="text-right font-medium">{formatPercent(result.geoMean, 2)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Standard Deviation</TableCell>

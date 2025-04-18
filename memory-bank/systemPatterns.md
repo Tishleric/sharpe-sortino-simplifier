@@ -1,5 +1,18 @@
 # System Patterns
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+This sprint introduces the following new or updated system patterns, which extend or override previous patterns where relevant:
+
+- **Geometric Mean for Annualisation**: All annualised returns now use geometric mean (CAGR) instead of arithmetic mean.
+- **Downside Deviation (m-1)**: Downside deviation calculation uses (m-1) denominator for sample standard deviation.
+- **Fractional Returns Enforcement**: All calculations require fractional returns; calculations are blocked if portfolioValue is missing and dataFormat is 'absolute'.
+- **Rolling Sharpe Statistics**: 30/60/90-day rolling Sharpe ratios are computed and visualized.
+- **Plotly Chart Integration**: Rolling Sharpe statistics are visualized using Plotly with Tailwind-themed traces, embedded in a new Accordion on the Results page.
+- **Scrollable Data Preview Table**: Data preview table is scrollable (max-h-64, overflow-auto).
+- **Footer Row Exclusion**: A toggle allows marking the last row as a footer, which is excluded from calculations and exports.
+- **Excel Export Overhaul**: Exports now include live-formula columns, static results, 2 dp formatting, and risk-free cell defaulting to 0 if blank.
+
 ## Architecture Overview
 The Sharpe Sortino Simplifier follows a client-side single-page application (SPA) architecture built with React and TypeScript. The application is structured to maintain a clear separation of concerns and facilitate component reuse.
 

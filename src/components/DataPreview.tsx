@@ -23,9 +23,9 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
   const [riskFreeRate, setRiskFreeRate] = useState<string>('0');
   const [tradingPeriods, setTradingPeriods] = useState<string>('252');
   const [targetReturn, setTargetReturn] = useState<string>('');
-  const [portfolioValue, setPortfolioValue] = useState<string>('');
+  const [portfolioValue, setPortfolioValue] = useState<string>('1000000');
   const [isLoading, setIsLoading] = useState(false);
-  const [dataFormat, setDataFormat] = useState<string>('auto');
+  const [dataFormat, setDataFormat] = useState<string>('absolute');
 
   // Handle column selection
   const handleColumnSelect = (value: string) => {
@@ -44,9 +44,9 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
     const riskFree = parseFloat(riskFreeRate);
     const periods = parseInt(tradingPeriods);
     const target = targetReturn ? parseFloat(targetReturn) : undefined;
-    const portfolio = portfolioValue ? parseFloat(portfolioValue) : undefined;
+    const portfolio = parseFloat(portfolioValue) || 1000000; // Default to 1M if not provided
 
-    if (isNaN(riskFree) || isNaN(periods) || (targetReturn && isNaN(target)) || (portfolioValue && isNaN(portfolio))) {
+    if (isNaN(riskFree) || isNaN(periods) || (targetReturn && isNaN(target)) || isNaN(portfolio)) {
       toast.error('Please enter valid numbers for all fields');
       return;
     }
@@ -65,10 +65,16 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
         columnIndex,
         dataFormat
       );
-      const effectiveFormat = dataFormat === 'auto' ? detectedFormat : dataFormat;
+      
+      // Force to 'absolute' format when any value > $1,000, regardless of initial selection
+      let effectiveFormat = dataFormat === 'auto' ? detectedFormat : dataFormat;
+      if (Math.max(...numericValues.map(Math.abs)) > 1000) {
+        console.log('Large values detected (>$1,000) - forcing absolute format');
+        effectiveFormat = 'absolute';
+      }
 
       // Validate portfolio value for absolute returns
-      if (effectiveFormat === 'absolute' && (!portfolio || portfolio <= 0)) {
+      if (effectiveFormat === 'absolute' && portfolio <= 0) {
         toast.error('Portfolio value is required and must be greater than zero for absolute returns');
         setIsLoading(false);
         return;
@@ -85,11 +91,8 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, onProceed, onReset }) =
         tradingPeriods: periods,
         targetReturn: target,
         dataFormat: effectiveFormat, // Use effective format
+        portfolioValue: portfolio // Always include portfolio value
       };
-
-      if (portfolio) {
-        params.portfolioValue = portfolio;
-      }
 
       onProceed(numericValues, params, effectiveFormat);
     } catch (error) {

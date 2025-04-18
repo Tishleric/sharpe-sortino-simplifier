@@ -1,5 +1,38 @@
 # Sharpe & Sortino Ratio Calculator - Product Requirements Document
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+This sprint introduces the following requirements, which supersede or extend previous requirements where relevant:
+
+### A. Math engine correctness
+- Use geometric mean (CAGR) for annualisation instead of arithmetic mean
+- Downside deviation must use (m-1) denominator
+- All calculations must use fractional returns; block calculation if portfolioValue is missing and dataFormat is 'absolute'
+- Result object must expose sharpeSE (standard error) and excessReturn
+
+### B. Results display
+- All numbers must display with 2 decimal places; show % whenever |value| < 1
+- Under Sharpe, display "± SE" in smaller grey text
+- Hide annualisation toggle (assume sub-annual data)
+
+### C. Rolling statistics
+- Compute 30/60/90-day rolling Sharpe ratios
+- Display a Plotly chart (3 traces, Tailwind themed) in a new Accordion section "Rolling Performance" at the bottom of the Results page
+
+### D. Data preview improvements
+- Preview table must be scrollable (max-h-64, overflow-auto)
+- Add a "Mark last row as footer" toggle; excluded row must not enter calculations or exports
+
+### E. Excel export overhaul
+- Sheet 1: Raw data + live-formula columns (geometric mean, σ, downside σ, Sharpe, Sortino, SE)
+- Sheet 2: Static copy of app results, step-by-step with brief comments
+- All cells formatted to 2 decimal places (% where appropriate)
+- Risk-free cell must default to 0 if left blank
+
+### F. Formatting & housekeeping
+- Remove unused props/imports
+- Update test-data JSON gold-sets to match new engine
+
 ## 1. Product Overview
 
 ### 1.1 Product Purpose

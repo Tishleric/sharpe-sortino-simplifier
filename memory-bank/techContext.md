@@ -1,5 +1,14 @@
 # Technical Context
 
+## Sprint-01 – Accuracy & UX polish (2025-04-18)
+
+This sprint introduces the following new technical requirements, which extend or override previous technical context where relevant:
+
+- **Plotly.js Integration**: Plotly.js is now required for rolling Sharpe chart visualization (in addition to Chart.js for histograms).
+- **Number Formatting**: All displayed numbers must use 2 decimal places, and show % whenever |value| < 1.
+- **Excel Export Logic**: Exports now include live-formula columns, static results, 2 dp formatting, and risk-free cell defaulting to 0 if blank.
+- **Fractional Returns Enforcement**: All calculations require fractional returns; calculations are blocked if portfolioValue is missing and dataFormat is 'absolute'.
+
 ## Technology Stack
 
 The Sharpe Sortino Simplifier is built with a modern frontend technology stack:
