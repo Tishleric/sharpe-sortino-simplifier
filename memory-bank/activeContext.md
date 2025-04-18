@@ -16,9 +16,18 @@ The Sharpe & Sortino Ratio Calculator is a complete, functional application that
 - Addition of educational content explaining the ratios and their interpretation
 
 ## Current Focus
-- Documenting the project's architecture and functionality
-- Maintaining mathematical accuracy and transparency in calculations
-- Ensuring the user interface is intuitive and responsive
+We've been improving the reliability and transparency of the Sharpe & Sortino ratio calculator, focusing on:
+
+1. **Debugging and fixing calculation issues** - We investigated why downside deviation sometimes appeared as "0.00" in the UI and determined it was due to rounding precision (values like 0.0042 displaying as 0.00 with 2 decimal places).
+
+2. **Enhancing Excel exports** - We've completely redesigned the Excel export functionality to provide a proper audit trail of all calculations:
+   - Added "Inputs & Summary", "Breakdown", and "Methodology" sheets
+   - Implemented live formula cells referencing raw data and parameters
+   - Fixed sheet name quoting in Excel formulas
+   - Ensured target return defaults to 0 if not specified to prevent formula errors
+   - Created a professional layout that makes calculations fully transparent and verifiable
+
+3. **Improving chart reliability** - Modified histogram binning logic to ensure no bin overlaps zero, giving a clearer picture of positive vs. negative returns.
 
 ## Active Decisions and Considerations
 
@@ -34,13 +43,16 @@ The Sharpe & Sortino Ratio Calculator is a complete, functional application that
 - Including visual distribution charts for better data understanding
 - Offering data export for further analysis
 
+## Decisions and Considerations
+- Mantained full transparency in calculations by providing both raw and processed data
+- Used SheetJS capabilities to create a professional Excel export
+- Avoided using data formats that don't work well across Excel/Google Sheets
+- Focused on making the export a true audit/validation tool that matches UI calculations to the decimal
+
 ## Next Steps
-- Gather user feedback on calculation methodology and interface
-- Consider potential enhancements:
-  - Support for more complex return series (irregular intervals)
-  - Addition of other risk-adjusted metrics (e.g., Calmar ratio, Omega ratio)
-  - Comparative analysis features for multiple data series
-  - Enhanced visualization options
+- Perform thorough testing with diverse datasets
+- Consider any UI improvements based on user feedback
+- Document the methodology and calculation precision improvements
 
 ## Open Questions
 - Should the application support more complex portfolio analysis?

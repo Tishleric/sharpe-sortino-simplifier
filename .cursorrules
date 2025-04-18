@@ -41,4 +41,38 @@ The application follows a strict three-step workflow: Upload → Configure → R
 ## Common Operations
 - Adding features should maintain the three-step workflow
 - Any new calculations should include educational content explaining methodology
-- UI components should follow shadcn/ui patterns for consistency 
+- UI components should follow shadcn/ui patterns for consistency
+
+# Sharpe-Sortino Calculator Project Rules
+
+## Calculation Precision Handling
+- Always display at least 4 decimal places for financial metrics like standard deviation and downside deviation
+- Small values (< 0.01) require proper precision to avoid showing as 0.00
+- When in doubt, use more decimal places for financial metrics rather than fewer
+
+## Excel Export Best Practices
+- Always quote sheet names with spaces using single quotes: `'Sheet Name'!A1` not `Sheet Name!A1`
+- Double any single quotes inside sheet names: `'Sheet''s Name'!A1`
+- Use cell references (G1, G2) in formulas rather than hardcoded values for flexibility
+- Ensure all parameter cells have valid default values (e.g., 0 instead of empty/undefined)
+- Create live formula cells using `{ t: 'n', f: 'formula' }` not just string representations
+- Provide raw data, calculation breakdown, and methodology explanation
+
+## Histogram Binning Logic
+- Never allow bins to overlap zero—split into strictly positive and negative bins
+- Ensure bins containing zero are either entirely positive or entirely negative
+- For financial data, color-code bins based on sign (red for negative, green for positive)
+- Proportionally allocate bins based on data range
+
+## Excel Objects and Formulas
+- Charts, cells, and formulas: https://github.com/SheetJS/sheetjs#cell-objects
+- To create a formula cell: `ws[addr] = { t:'n', f:'SUM(A1:A5)' };`
+- To set column width: `ws['!cols'] = [{ wch: 10 }, { wch: 20 }];`
+- To freeze panes: `ws['!freeze'] = { xSplit: 0, ySplit: 1 };` (freeze 1st row)
+
+## Data Type and Format Handling
+- Absolute returns (dollar values) need fractional conversion for ratio calculations
+- Percentage returns need division by 100 for calculations
+- Decimal returns can be used directly
+- Always verify units match before calculations (e.g., risk-free rate format matching return format)
+- Validate parameter types to avoid TypeScript comparison errors (number vs string) 

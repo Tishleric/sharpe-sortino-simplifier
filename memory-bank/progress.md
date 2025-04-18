@@ -1,4 +1,51 @@
-# Progress
+# Project Progress
+
+## What Works
+
+- **Core Functionality**
+  - File upload and parsing (CSV, Excel)
+  - Data format detection and conversion
+  - Sharpe and Sortino ratio calculations
+  - Display of results with 4 decimal precision
+  - Distribution visualization
+  - Data export (CSV and Excel)
+
+- **User Interface**
+  - Three-step workflow: Upload → Configure → Results
+  - Data preview with column selection
+  - Parameter configuration
+  - Results dashboard with tabs
+
+- **Recent Enhancements**
+  - Excel export now includes:
+    - Inputs & Summary sheet with raw/fractional returns and parameters
+    - Detailed Breakdown sheet showing all calculation steps
+    - Methodology explanation sheet
+    - Live Excel formulas that reference cells, not hardcoded values
+    - Properly quoted sheet names in formulas for Excel compatibility
+  - Fixed display of small values (e.g., downside deviation) by increasing decimals from 2 to 4
+  - Improved histogram binning by splitting at zero, ensuring bins are definitively positive or negative
+  - Ensured target return parameter defaults to 0 in Excel to prevent formula errors
+
+## What's Left to Build
+
+- **Potential Enhancements**
+  - Support for more complex return series (irregular intervals)
+  - Addition of other risk-adjusted metrics (e.g., Calmar ratio, Omega ratio)
+  - Comparative analysis features for multiple data series
+  - Enhanced visualization options
+
+## Known Issues
+
+- None currently—we've recently resolved:
+  - Display issues with small decimal values
+  - Excel formula errors with sheet name quoting
+  - Histogram bin overlap at zero
+  - Empty target return parameter causing Excel formula errors
+
+## Technical Debt
+
+- Consider updating the browserslist database (currently 7 months old)
 
 ## Complete Features
 
@@ -39,9 +86,6 @@
 - ⬜ Offline support (PWA)
 - ⬜ Support for direct API data sources
 - ⬜ Unit and integration tests
-
-## Known Issues
-- None identified - The application is functioning as expected with no known bugs
 
 ## Current Status
 The application is fully functional and ready for use. All core requirements have been implemented successfully, providing users with a complete tool for calculating and understanding risk-adjusted performance metrics.
