@@ -1,0 +1,44 @@
+# Sharpe & Sortino Ratio Calculator - Project Intelligence
+
+## Purpose & Workflow
+The application follows a strict three-step workflow: Upload → Configure → Results. All interaction flows through this process, with each step dependent on the previous one's completion.
+
+## Architecture Insights
+- The main state management happens in the Index.tsx component, with presentation components for each step
+- All financial calculations are contained in calculationUtils.ts
+- File processing and data extraction are handled in fileUtils.ts
+- The UI follows shadcn/ui patterns with Tailwind CSS for styling
+
+## Data Flow Patterns
+- File uploads are processed client-side via XLSX.js
+- Data format is detected automatically but can be overridden by the user
+- Component state transitions manage the application workflow
+- Toast notifications provide feedback for errors and successful operations
+
+## Mathematical Understanding
+- Sharpe Ratio = (Mean Return - Risk Free Rate) / Standard Deviation × √(Trading Periods)
+- Sortino Ratio = (Mean Return - Risk Free Rate) / Downside Deviation × √(Trading Periods)
+- Risk-free rate conversion uses compound interest formula: (1 + annual rate)^(1/periods) - 1
+- Standard deviation uses n-1 denominator (sample standard deviation)
+- Downside deviation only considers returns below the target (or risk-free rate)
+
+## Data Format Handling
+- Percentage: Values like 5 are treated as 5% (divided by 100 for calculations)
+- Decimal: Values like 0.05 are treated as 5% (used directly)
+- Absolute: Dollar values, used directly for calculations
+- Auto-detection examines value ranges to determine the most likely format
+
+## User Preferences
+- Clear, educational content is important - users likely need to understand what the ratios mean
+- Mathematical transparency is essential - financial professionals need to trust the calculation methodology
+- Performance for large datasets matters - some users may upload extensive historical data
+
+## Known Challenges
+- Excel date detection requires special handling due to Excel's unique date system
+- Format detection can be ambiguous when values fall in overlapping ranges
+- Absolute dollar returns need portfolio value for meaningful ratio calculation
+
+## Common Operations
+- Adding features should maintain the three-step workflow
+- Any new calculations should include educational content explaining methodology
+- UI components should follow shadcn/ui patterns for consistency 

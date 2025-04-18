@@ -15,6 +15,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { CalculationResult, formatNumber, formatPercent } from '@/utils/calculationUtils';
+import { CalculationParams } from '@/utils/calculationUtils';
+import { exportAnalysisToXLSX } from '@/utils/exportUtils';
 import { Separator } from '@/components/ui/separator';
 
 // Register Chart.js components
@@ -32,13 +34,14 @@ interface ResultsProps {
   returnValues: number[];
   onReset: () => void;
   dataFormat: string;
+  params: CalculationParams;
 }
 
-const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFormat }) => {
+const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFormat, params }) => {
   const [activeTab, setActiveTab] = useState('summary');
 
   // Format value based on data format
-  const formatValue = (value: number, decimals: number = 2): string => {
+  const formatValue = (value: number, decimals: number = 4): string => {
     if (dataFormat === 'absolute') {
       // For absolute values, just show the number with fixed decimals
       return value.toFixed(decimals);
@@ -58,7 +61,7 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
   };
 
   // Format ratio (Sharpe, Sortino) as dimensionless number
-  const formatRatio = (value: number, decimals: number = 2): string => {
+  const formatRatio = (value: number, decimals: number = 4): string => {
     // Ratios should always be displayed as dimensionless numbers
     // without percentage signs or other modifications
     return value.toFixed(decimals);
@@ -91,26 +94,57 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
     // Create bins for the histogram
     const minReturn = Math.min(...returnValues);
     const maxReturn = Math.max(...returnValues);
-    const range = maxReturn - minReturn;
-    const binCount = Math.min(20, Math.ceil(Math.sqrt(returnValues.length)));
-    const binWidth = range / binCount;
-    
-    const bins = Array(binCount).fill(0).map((_, i) => ({
-      min: minReturn + i * binWidth,
-      max: minReturn + (i + 1) * binWidth,
-      count: 0,
-      isNegative: (minReturn + i * binWidth) < 0
-    }));
-    
+    let bins = [];
+    // If min and max are both on the same side of zero, use default binning
+    if (minReturn >= 0 || maxReturn <= 0) {
+      const range = maxReturn - minReturn;
+      const binCount = Math.min(20, Math.ceil(Math.sqrt(returnValues.length)));
+      const binWidth = range / binCount;
+      bins = Array(binCount).fill(0).map((_, i) => ({
+        min: minReturn + i * binWidth,
+        max: minReturn + (i + 1) * binWidth,
+        count: 0,
+        isNegative: (minReturn + i * binWidth) < 0
+      }));
+    } else {
+      // Split at zero: negative bins up to 0, positive bins from 0
+      const negRange = 0 - minReturn;
+      const posRange = maxReturn - 0;
+      const totalRange = maxReturn - minReturn;
+      const binCount = Math.min(20, Math.ceil(Math.sqrt(returnValues.length)));
+      // Proportionally allocate bins
+      const negBins = Math.max(1, Math.round(binCount * (negRange / totalRange)));
+      const posBins = binCount - negBins;
+      const negBinWidth = negRange / negBins;
+      const posBinWidth = posRange / Math.max(1, posBins);
+      // Negative bins
+      for (let i = 0; i < negBins; i++) {
+        bins.push({
+          min: minReturn + i * negBinWidth,
+          max: minReturn + (i + 1) * negBinWidth,
+          count: 0,
+          isNegative: true
+        });
+      }
+      // Positive bins
+      for (let i = 0; i < posBins; i++) {
+        bins.push({
+          min: 0 + i * posBinWidth,
+          max: 0 + (i + 1) * posBinWidth,
+          count: 0,
+          isNegative: false
+        });
+      }
+    }
     // Count returns in each bin
     returnValues.forEach(val => {
-      const binIndex = Math.min(
-        binCount - 1, 
-        Math.floor((val - minReturn) / binWidth)
-      );
-      bins[binIndex].count++;
+      const binIndex = bins.findIndex(bin => val >= bin.min && val < bin.max);
+      if (binIndex !== -1) {
+        bins[binIndex].count++;
+      } else if (val === maxReturn) {
+        bins[bins.length - 1].count++;
+      }
     });
-    
     return {
       labels: bins.map(bin => {
         if (dataFormat === 'absolute') {
@@ -157,6 +191,11 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
         },
       },
     },
+  };
+
+  // Export to Excel (XLSX)
+  const handleExportExcel = () => {
+    exportAnalysisToXLSX(result, returnValues, params);
   };
 
   const handleExport = () => {
@@ -283,7 +322,16 @@ const Results: React.FC<ResultsProps> = ({ result, returnValues, onReset, dataFo
                   className="flex items-center gap-1"
                 >
                   <Download className="h-4 w-4" />
-                  <span>Export</span>
+                  <span>Export CSV</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExportExcel}
+                  className="flex items-center gap-1"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Export XLSX</span>
                 </Button>
                 <Button 
                   variant="ghost" 

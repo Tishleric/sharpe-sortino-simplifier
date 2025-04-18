@@ -15,6 +15,8 @@ enum AppState {
 }
 
 const Index = () => {
+  // Store calculation parameters for Excel export
+  const [calculationParams, setCalculationParams] = useState<CalculationParams | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.UPLOAD);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -29,7 +31,7 @@ const Index = () => {
   
   // Handle calculation
   const handleCalculate = (values: number[], params: CalculationParams, format: string) => {
-    // Add dataFormat to params
+    // Save params for downstream features (e.g., Excel export)
     const paramsWithFormat = {
       ...params,
       dataFormat: format
@@ -40,6 +42,7 @@ const Index = () => {
     setResult(calculationResult);
     setDataFormat(format);
     setAppState(AppState.RESULTS);
+    setCalculationParams(paramsWithFormat);
   };
   
   // Reset and start over
@@ -143,6 +146,7 @@ const Index = () => {
               returnValues={returnValues}
               onReset={handleReset}
               dataFormat={dataFormat}
+              params={calculationParams!} // non-null since only in RESULTS state
             />
           )}
         </div>
